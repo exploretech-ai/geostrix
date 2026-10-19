@@ -28,6 +28,16 @@ if [[ "$(uname -s)" != Darwin || "$(uname -m)" != arm64 ]]; then
   exit 1
 fi
 
+# Apple's own tools first. PyInstaller runs its helper processes as `arch -arm64 python ...` with whatever `arch` is
+# on PATH, and a devbox/Nix shell (or Homebrew coreutils' gnubin) puts GNU coreutils' `arch` there, which takes no
+# options: the freeze died with "arch: invalid option -- 'a'". codesign, otool, install_name_tool and lipo must be
+# Apple's too. node/npm aren't in these directories, so they still come from wherever they were.
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+if [[ "$(command -v arch)" != /usr/bin/arch ]]; then
+  echo "!! \`arch\` resolves to $(command -v arch), not /usr/bin/arch." >&2
+  exit 1
+fi
+
 IDENTITY="Developer ID Application: Exploration Technologies, Inc (CK8MVY2C3J)"
 TEAM_ID="CK8MVY2C3J"
 VENV_PY="python-sidecar/venv/bin/python"
